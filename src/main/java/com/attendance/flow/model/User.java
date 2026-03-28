@@ -59,7 +59,7 @@ public class User {
     @Builder.Default
     private Set<AppGroup> groups = new HashSet<>();
 
-    private boolean enabled = true;
+    private boolean enabled = false;
 
     @Enumerated(EnumType.STRING)
     @Builder.Default
