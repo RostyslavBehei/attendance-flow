@@ -6,23 +6,34 @@ import com.attendance.flow.exception.VerificationStatusException;
 import com.attendance.flow.model.User;
 import com.attendance.flow.model.dto.user.*;
 import com.attendance.flow.model.enums.Role;
+import com.attendance.flow.model.enums.TokenAction;
 import com.attendance.flow.model.enums.VerificationStatus;
 import com.attendance.flow.repository.UserRepository;
+import com.attendance.flow.service.EmailService;
 import com.attendance.flow.service.UserService;
+import com.attendance.flow.service.VerificationTokenService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+    private final VerificationTokenService verificationTokenService;
+
+    @Value("${app.base-url}")
+    private String baseUrl;
 
     @Override
     @Transactional(readOnly = true)
@@ -38,6 +49,10 @@ public class UserServiceImpl implements UserService {
             throw new AlreadyExistsException("User with email already exists: " + request.email());
         }
 
+        if (userRepository.existsByPhoneNumber(request.phoneNumber())) {
+            throw new AlreadyExistsException("User with phone number already exists: " + request.phoneNumber());
+        }
+
         VerificationStatus verificationStatus = (request.role() == Role.ROLE_PRINCIPAL) ? VerificationStatus.PENDING : VerificationStatus.NOT_REQUIRED;
 
         String hashedPassword = passwordEncoder.encode(request.password());
@@ -51,11 +66,16 @@ public class UserServiceImpl implements UserService {
                 .email(request.email())
                 .password(hashedPassword)
                 .role(request.role())
-                .enabled(true)
+                .enabled(false)
                 .verificationStatus(verificationStatus)
                 .build();
 
         User savedUser = userRepository.save(newUser);
+
+        String token = verificationTokenService.generateToken(savedUser, TokenAction.VERIFY_ACCOUNT, 60, false);
+
+        String confirmationUrl = baseUrl + "/verify?token=" + token;
+        emailService.sendWelcomeMessage(savedUser.getEmail(), savedUser.getFirstName(), confirmationUrl);
 
         return mapToDto(savedUser);
     }
@@ -96,7 +116,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     public UserProfileResponse verifyPrincipal(Long principalId, ChangeVerificationStatusRequest request) {
         User principal = userRepository.findById(principalId)
                 .orElseThrow(() -> new NotFoundException("Principal with id " + principalId + " not found"));
@@ -109,6 +128,71 @@ public class UserServiceImpl implements UserService {
         User savedUser = userRepository.save(principal);
 
         return mapToDto(savedUser);
+    }
+
+    @Override
+    @Transactional
+    public boolean verifyUserAccount(String token) {
+        Optional<User> userOpt = verificationTokenService.validateToken(token, TokenAction.VERIFY_ACCOUNT);
+
+        if (userOpt.isEmpty()) {
+            return false;
+        }
+
+        User user = userOpt.get();
+        user.setEnabled(true);
+        userRepository.save(user);
+
+        return true;
+    }
+
+    @Override
+    @Transactional
+    public void processForgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User with email " + email + " not found"));
+
+        String token = verificationTokenService.generateToken(user, TokenAction.RESET_PASSWORD, 60, false);
+
+        String resetUrl = baseUrl + "/resetpassword?token=" + token;
+        emailService.sendPasswordResetMessage(user.getEmail(), resetUrl);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isResetPasswordTokenValid(String token) {
+        return verificationTokenService.isTokenValid(token, TokenAction.RESET_PASSWORD);
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(String token, String newPassword) {
+        Optional<User> userOpt = verificationTokenService.validateToken(token, TokenAction.RESET_PASSWORD);
+
+        if (userOpt.isEmpty()) {
+            throw new IllegalArgumentException("Token " + token + " not found");
+        }
+        User user = userOpt.get();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void updateAvatar(String email, String avatarUrl) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User with email " + email + " not found"));
+        user.setAvatarUrl(avatarUrl);
+        userRepository.save(user);
+    }
+
+    @Override
+    @Transactional
+    public void updateVerificationDocument(String email, String documentUrl) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("User with email " + email + " not found"));
+        user.setVerificationDocumentUrl(documentUrl);
+        userRepository.save(user);
     }
 
     @Override

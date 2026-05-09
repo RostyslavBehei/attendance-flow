@@ -9,7 +9,9 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -24,12 +26,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(nullable = false)
+    @Column(name = "last_name", nullable = false)
     private String lastName;
 
+    @Column(name = "middle_name")
     private String middleName;
 
     @Column(nullable = false)
@@ -67,6 +70,9 @@ public class User {
 
     @Column(name = "verification_document_url")
     private String verificationDocumentUrl;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MessengerAccount> messengerAccounts = new ArrayList<>();
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
