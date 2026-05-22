@@ -1,0 +1,51 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-messenger-account-table
+      author: RostyslavBehei
+      changes:
+        - createTable:
+            schemaName: attendance
+            tableName: messenger_accounts
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: messenger_type
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: chat_id
+                  type: varchar(255)
+              - column:
+                  name: username
+                  type: varchar(255)
+              - column:
+                  name: bot_state
+                  type: varchar(255)
+              - column:
+                  name: notification
+                  type: boolean
+                  defaultValueBoolean: true
+              - column:
+                  name: language
+                  type: varchar(50)
+                  defaultValue: "ENGLISH"
+              - column:
+                  name: user_id
+                  type: bigint
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: messenger_accounts
+            baseColumnNames: user_id
+            referencedTableSchemaName: attendance
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_messenger_accounts_user
+            onDelete: SET NULL

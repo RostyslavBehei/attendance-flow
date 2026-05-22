@@ -1,0 +1,76 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-users-table
+      author: RostyslavBehei
+      changes:
+        - createTable:
+            tableName: users
+            schemaName: attendance
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: first_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: last_name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: middle_name
+                  type: varchar(255)
+              - column:
+                  name: birthday
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: avatar_url
+                  type: varchar(255)
+              - column:
+                  name: phone_number
+                  type: varchar(50)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(50)
+                  constraints:
+                    unique: true
+                    nullable: false
+              - column:
+                  name: password
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: role
+                  type: varchar(50)
+              - column:
+                  name: enabled
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: verification_status
+                  type: varchar(50)
+              - column:
+                  name: verification_document_url
+                  type: varchar(255)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: timestamp

@@ -1,0 +1,39 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-schedules-table
+      author: RostyslavBehei
+      changes:
+        - createTable:
+            schemaName: attendance
+            tableName: schedules
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: group_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: day_of_week
+                  type: varchar(20)
+
+        - addUniqueConstraint:
+            schemaName: attendance
+            tableName: schedules
+            columnNames: group_id, day_of_week
+            constraintName: uq_group_day_of_week
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: schedules
+            baseColumnNames: group_id
+            referencedTableSchemaName: attendance
+            referencedTableName: app_groups
+            referencedColumnNames: id
+            constraintName: fk_schedules_group

@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-group-teachers-table
+      author: RostyslavBehei
+      changes:
+        - createTable:
+            schemaName: attendance
+            tableName: group_teachers
+            columns:
+              - column:
+                  name: group_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: teacher_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            schemaName: attendance
+            tableName: group_teachers
+            columnNames: group_id, teacher_id
+            constraintName: uq_group_teachers_pair
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: group_teachers
+            baseColumnNames: group_id
+            referencedTableSchemaName: attendance
+            referencedTableName: app_groups
+            referencedColumnNames: id
+            constraintName: fk_group_teachers_group
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: group_teachers
+            baseColumnNames: teacher_id
+            referencedTableSchemaName: attendance
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_group_teachers_teacher

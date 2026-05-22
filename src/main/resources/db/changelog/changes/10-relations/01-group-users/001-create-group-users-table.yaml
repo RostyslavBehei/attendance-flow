@@ -1,0 +1,43 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-group-users-table
+      author: RostyslavBehei
+      changes:
+        - createTable:
+            schemaName: attendance
+            tableName: group_users
+            columns:
+              - column:
+                  name: user_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: group_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+
+        - addUniqueConstraint:
+            schemaName: attendance
+            tableName: group_users
+            columnNames: user_id, group_id
+            constraintName: uq_group_users_pair
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: group_users
+            baseColumnNames: user_id
+            referencedTableSchemaName: attendance
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_group_users_user
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: group_users
+            baseColumnNames: group_id
+            referencedTableSchemaName: attendance
+            referencedTableName: app_groups
+            referencedColumnNames: id
+            constraintName: fk_group_users_group

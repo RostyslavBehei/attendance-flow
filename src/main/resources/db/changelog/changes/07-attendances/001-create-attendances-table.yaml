@@ -1,0 +1,59 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-attendances-table
+      author: RostyslavBehei
+      changes:
+        - createTable:
+            schemaName: attendance
+            tableName: attendances
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: lesson_session_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: student_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: comment
+                  type: varchar(255)
+
+        - addUniqueConstraint:
+            schemaName: attendance
+            tableName: attendances
+            columnNames: lesson_session_id, student_id
+            constraintName: uq_attendances_pair
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: attendances
+            baseColumnNames: lesson_session_id
+            referencedTableSchemaName: attendance
+            referencedTableName: lesson_sessions
+            referencedColumnNames: id
+            constraintName: fk_attendances_lesson_session
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: attendances
+            baseColumnNames: student_id
+            referencedTableSchemaName: attendance
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_attendances_student

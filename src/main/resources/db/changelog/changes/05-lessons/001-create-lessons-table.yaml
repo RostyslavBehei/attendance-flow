@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-lessons-table
+      author: RostyslavBehei
+      changes:
+        - createTable:
+            schemaName: attendance
+            tableName: lessons
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: lesson_number
+                  type: int
+              - column:
+                  name: schedule_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subject_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: start_time
+                  type: time
+              - column:
+                  name: end_time
+                  type: time
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: lessons
+            baseColumnNames: schedule_id
+            referencedTableSchemaName: attendance
+            referencedTableName: schedules
+            referencedColumnNames: id
+            constraintName: fk_lessons_schedule
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: lessons
+            baseColumnNames: subject_id
+            referencedTableSchemaName: attendance
+            referencedTableName: subjects
+            referencedColumnNames: id
+            constraintName: fk_lessons_subject

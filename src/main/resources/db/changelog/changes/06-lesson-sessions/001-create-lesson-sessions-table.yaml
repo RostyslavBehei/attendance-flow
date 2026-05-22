@@ -1,0 +1,66 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-lesson-sessions-table
+      author: RostyslavBehei
+      changes:
+        - createTable:
+            schemaName: attendance
+            tableName: lesson_sessions
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    nullable: false
+                    primaryKey: true
+              - column:
+                  name: lesson_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: date_time
+                  type: timestamp
+                  constraints:
+                    nullable: false
+              - column:
+                  name: topic
+                  type: varchar(255)
+              - column:
+                  name: marked_by_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: timestamp
+
+        - addUniqueConstraint:
+            schemaName: attendance
+            tableName: lesson_sessions
+            columnNames: lesson_id, date_time
+            constraintName: uq_session_lesson_data_time
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: lesson_sessions
+            baseColumnNames: lesson_id
+            referencedTableSchemaName: attendance
+            referencedTableName: lessons
+            referencedColumnNames: id
+            constraintName: fk_lesson_sessions_lesson
+            onDelete: CASCADE
+
+        - addForeignKeyConstraint:
+            baseTableSchemaName: attendance
+            baseTableName: lesson_sessions
+            baseColumnNames: marked_by_id
+            referencedTableSchemaName: attendance
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_lesson_sessions_marked_by

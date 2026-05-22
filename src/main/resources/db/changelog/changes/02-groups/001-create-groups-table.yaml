@@ -1,0 +1,42 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-groups-table
+      author: RostyslavBehei
+      changes:
+        - createTable:
+            tableName: app_groups
+            schemaName: attendance
+            columns:
+              - column:
+                  name: id
+                  type: bigint
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+              - column:
+                  name: invite_code
+                  type: varchar(100)
+                  constraints:
+                    unique: true
+              - column:
+                  name: lesson_duration_minutes
+                  type: int
+                  defaultValueNumeric: 90
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: timestamp

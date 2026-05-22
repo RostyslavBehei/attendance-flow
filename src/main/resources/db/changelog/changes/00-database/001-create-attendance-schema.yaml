@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-attendance-schema
+      author: RostyslavBehei
+      changes:
+        - sql:
+            sql: CREATE SCHEMA IF NOT EXISTS attendance
