@@ -1,10 +1,10 @@
 package com.attendance.flow.service.impl;
 
 import com.attendance.flow.exception.NotFoundException;
-import com.attendance.flow.model.AppGroup;
 import com.attendance.flow.model.Attendance;
 import com.attendance.flow.model.User;
 import com.attendance.flow.model.dto.attendanceRecord.AttendanceMarkRequest;
+import com.attendance.flow.model.dto.attendanceRecord.AttendanceMarkedEvent;
 import com.attendance.flow.model.dto.attendanceRecord.AttendanceResponse;
 import com.attendance.flow.model.dto.attendanceRecord.StudentAttendanceStatsResponse;
 import com.attendance.flow.model.enums.AttendanceStatus;
@@ -13,6 +13,7 @@ import com.attendance.flow.repository.AttendanceRepository;
 import com.attendance.flow.repository.UserRepository;
 import com.attendance.flow.service.AttendanceService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final UserRepository userRepository;
     private final AppGroupRepository appGroupRepository;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(readOnly = true)
@@ -77,6 +80,12 @@ public class AttendanceServiceImpl implements AttendanceService {
         attendance.setComment(request.comment());
 
         Attendance updatedAttendance = attendanceRepository.save(attendance);
+
+        eventPublisher.publishEvent(new AttendanceMarkedEvent(
+                updatedAttendance.getStudent().getId(),
+                updatedAttendance.getStatus()
+        ));
+
         return mapToResponse(updatedAttendance);
     }
 
