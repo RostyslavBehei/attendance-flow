@@ -1,6 +1,8 @@
 package com.attendance.flow.repository;
 
+import com.attendance.flow.model.User;
 import com.attendance.flow.model.VerificationToken;
+import com.attendance.flow.model.enums.TokenAction;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -12,7 +14,9 @@ import java.util.Optional;
 
 @Repository
 public interface VerificationTokenRepository extends JpaRepository<VerificationToken, Long> {
-    Optional<VerificationToken> findByToken(String token);
+    Optional<VerificationToken> findByTokenAndTokenAction(String token, TokenAction tokenAction);
+
+    void deleteByUserAndTokenAction(User user, TokenAction tokenAction);
 
     @Modifying
     @Query("delete from VerificationToken vt where vt.expiryDate <= :now")
