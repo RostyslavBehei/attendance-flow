@@ -1,0 +1,113 @@
+version: '3.8'
+
+services:
+  app-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: attendance_flow_app
+    ports:
+      - "${SERVER_PORT:-8080}:${SERVER_PORT:-8080}"
+    environment:
+      # App
+      APP_BASE_URL: ${APP_BASE_URL}
+      SERVER_PORT: ${SERVER_PORT}
+
+      # Database
+      SPRING_DATASOURCE_URL: ${DB_POSTGRES_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_POSTGRES_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: ${DB_POSTGRES_DRIVER}
+
+      # Mail
+      SPRING_MAIL_HOST: ${MAIL_HOST}
+      SPRING_MAIL_PORT: ${MAIL_PORT}
+      SPRING_MAIL_USERNAME: ${MAIL_USERNAME}
+      SPRING_MAIL_PASSWORD: ${MAIL_PASSWORD}
+
+      # Telegram Bot
+      TELEGRAM_BOT_USERNAME: ${TG_BOT_NAME}
+      TELEGRAM_BOT_TOKEN: ${TG_BOT_TOKEN}
+
+      # Redis
+      SPRING_DATA_REDIS_HOST: redis-cache
+      SPRING_DATA_REDIS_PORT: ${SPRING_REDIS_PORT}
+      SPRING_REDIS_TTL: ${SPRING_REDIS_TTL}
+
+      # OAuth2
+      SPRING_OAUTH2_CLIENT_ID: ${SPRING_OAUTH2_CLIENT_ID}
+      SPRING_OAUTH2_CLIENT_SECRET: ${SPRING_OAUTH2_CLIENT_SECRET}
+
+      # JWT
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION}
+
+    depends_on:
+      postgres-db:
+        condition: service_healthy
+      redis-cache:
+        condition: service_started
+    networks:
+      - attendance_net
+
+  postgres-db:
+    image: postgres:17-alpine
+    container_name: attendance_flow_db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: attendance_flow
+      POSTGRES_USER: ${DB_POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${DB_POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - attendance_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_POSTGRES_USERNAME} -d attendance_flow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis-cache:
+    image: redis:7-alpine
+    container_name: attendance_flow_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - attendance_net
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: attendance_flow_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - attendance_net
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: attendance_flow_grafana
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - attendance_net
+
+volumes:
+  postgres_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  attendance_net:
+    driver: bridge
