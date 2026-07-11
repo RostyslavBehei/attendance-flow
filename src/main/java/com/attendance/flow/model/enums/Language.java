@@ -1,7 +1,7 @@
 package com.attendance.flow.model.enums;
 
 public enum Language {
-    UKRAINE,
+    UKRAINIAN,
     ENGLISH,
     POLISH
 }
