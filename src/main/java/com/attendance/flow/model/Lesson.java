@@ -17,6 +17,7 @@ public class Lesson {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "lesson_number")
     private Integer lessonNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
