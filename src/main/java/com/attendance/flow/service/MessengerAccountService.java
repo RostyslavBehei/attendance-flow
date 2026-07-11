@@ -22,4 +22,6 @@ public interface MessengerAccountService {
     Optional<MessengerAccountResponse> checkPendingToken(String chatId, String token);
 
     Optional<StudentAttendanceStatsResponse> getStudentStats(String chatId, Long groupId);
+
+    void unlinkMessengerAccount(String chatId);
 }

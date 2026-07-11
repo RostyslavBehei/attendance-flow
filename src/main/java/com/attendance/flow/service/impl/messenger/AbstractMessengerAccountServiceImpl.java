@@ -159,6 +159,18 @@ public abstract class AbstractMessengerAccountServiceImpl<T extends MessengerAcc
         return Optional.ofNullable(attendanceService.getStudentStats(account.getUser().getId(), groupId));
     }
 
+    @Override
+    @Transactional
+    public void unlinkMessengerAccount(String chatId) {
+        messengerAccountRepository.findByChatId(chatId).ifPresent(account -> {
+            if (account.getUser() != null) {
+                account.setUser(null);
+                account.setBotState(BotState.AWAITING_TOKEN);
+                messengerAccountRepository.save(account);
+            }
+        });
+    }
+
     private MessengerAccountResponse mapToDto(MessengerAccount account) {
         List<AppGroupSummaryResponse> appGroupSummaryResponse = new ArrayList<>();
         Long userId = null;
@@ -186,6 +198,8 @@ public abstract class AbstractMessengerAccountServiceImpl<T extends MessengerAcc
                 account.getChatId(),
                 account.getUsername(),
                 account.getBotState(),
+                account.isNotification(),
+                account.getLanguage(),
                 userId,
                 firstName,
                 lastName,
