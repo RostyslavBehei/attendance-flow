@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "lesson_session", schema = "attendance", uniqueConstraints = {
+@Table(name = "lesson_sessions", schema = "attendance", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"lesson_id", "date_time"})
 })
 @Getter
@@ -25,7 +25,7 @@ public class LessonSession {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "lesson_Id", nullable = false)
+    @JoinColumn(name = "lesson_id", nullable = false)
     private Lesson lesson;
 
     @Column(name = "date_time", nullable = false)
