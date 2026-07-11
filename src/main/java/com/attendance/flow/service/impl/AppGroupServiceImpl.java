@@ -11,7 +11,6 @@ import com.attendance.flow.model.enums.VerificationStatus;
 import com.attendance.flow.repository.AppGroupRepository;
 import com.attendance.flow.repository.UserRepository;
 import com.attendance.flow.service.AppGroupService;
-import com.attendance.flow.exception.AccessDeniedException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,7 +35,7 @@ public class AppGroupServiceImpl implements AppGroupService {
         User principal = userRepository.findById(principalId)
                 .orElseThrow(() -> new NotFoundException("User with id " + principalId + " not found"));
 
-        if (principal .getRole() != Role.ROLE_PRINCIPAL) {
+        if (principal.getRole() != Role.ROLE_PRINCIPAL) {
             throw new AccessDeniedException("Only principal can create app groups!");
         }
 
@@ -53,9 +52,9 @@ public class AppGroupServiceImpl implements AppGroupService {
                 .inviteCode(inviteCode)
                 .build();
 
-        AppGroup savedGroup = appGroupRepository.save(appGroup);
+        appGroup.addTeacher(principal);
 
-        principal.getGroups().add(appGroup);
+        AppGroup savedGroup = appGroupRepository.save(appGroup);
         userRepository.save(principal);
 
         UserSummaryResponse principalDto = new UserSummaryResponse(
@@ -75,7 +74,7 @@ public class AppGroupServiceImpl implements AppGroupService {
 
     @Override
     @Transactional
-    public AppGroupDetailedResponse joinAppGroup(Long studentId, AppGroupJoinRequest request) {
+    public AppGroupDetailedResponse addStudentToGroup(Long studentId, AppGroupJoinRequest request) {
         User student = userRepository.findById(studentId)
                 .orElseThrow(() -> new NotFoundException("User with id " + studentId + " not found"));
 
@@ -90,8 +89,8 @@ public class AppGroupServiceImpl implements AppGroupService {
             throw new AccessDeniedException("You are already joined this group!");
         }
 
-        group.getStudents().add(student);
-        userRepository.save(student);
+        group.addStudent(student);
+        appGroupRepository.save(group);
         return mapToDetailedResponse(group);
     }
 
@@ -104,14 +103,14 @@ public class AppGroupServiceImpl implements AppGroupService {
         User principal  = userRepository.findById(principalId)
                 .orElseThrow(() -> new NotFoundException("User with id " + principalId + " not found"));
 
-        if (!appGroup.getTeachers().contains(principal )) {
+        if (!appGroup.getTeachers().contains(principal)) {
             throw new AccessDeniedException("You do not have permission to add teachers to this group!");
         }
 
         User newTeacher = userRepository.findByEmail(request.teacherEmail())
-                .orElseThrow(() -> new NotFoundException("Teacher with id " + request.teacherEmail() + " not found"));
+                .orElseThrow(() -> new NotFoundException("Teacher with email " + request.teacherEmail() + " not found"));
 
-        if (newTeacher.getRole() != Role.ROLE_TEACHER && newTeacher.getRole() != Role.ROLE_PRINCIPAL ) {
+        if (newTeacher.getRole() != Role.ROLE_TEACHER && newTeacher.getRole() != Role.ROLE_PRINCIPAL) {
             throw new AccessDeniedException("Only teachers or other principal can be added!");
         }
 
@@ -131,14 +130,11 @@ public class AppGroupServiceImpl implements AppGroupService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User with id " + userId + " not found"));
 
-        List<AppGroup> userGroups;
-        if (user.getRole() == Role.ROLE_STUDENT) {
-            userGroups = appGroupRepository.findAllByStudentsId(userId);
-        } else if (user.getRole() == Role.ROLE_PRINCIPAL  || user.getRole() == Role.ROLE_TEACHER) {
-            userGroups = appGroupRepository.findAllByTeachersId(userId);
-        } else {
-            throw new AccessDeniedException("There are no groups for this role.");
-        }
+        List<AppGroup> userGroups = switch(user.getRole()) {
+            case Role.ROLE_STUDENT -> appGroupRepository.findAllByStudentsId(user.getId());
+            case Role.ROLE_PRINCIPAL, ROLE_TEACHER -> appGroupRepository.findAllByTeachersId(user.getId());
+            default -> throw new AccessDeniedException("There are no groups for this role.");
+        };
 
         return userGroups.stream()
                 .map(this::mapToSummaryResponse)
