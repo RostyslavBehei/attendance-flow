@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "schedule", schema = "attendance", uniqueConstraints = {
+@Table(name = "schedules", schema = "attendance", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"group_id", "day_of_week"})
 })
 @Getter
