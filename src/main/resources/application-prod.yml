@@ -1,0 +1,104 @@
+# App Setting
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+
+# Server port
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  mvc:
+    problemdetails:
+      enabled: true
+
+  messages:
+    basename: messages
+
+  # LiquiBase Setting
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: attendance
+    liquibase-schema: attendance
+
+  # H2 Database
+  h2:
+    console:
+      enabled: true
+  datasource:
+    url: jdbc:h2:file:./data/attendance_db;INIT=CREATE SCHEMA IF NOT EXISTS attendance
+    driver-class-name: ${DB_H2_DRIVER:org.h2.Driver}
+    username: ${DB_H2_USERNAME:sa}
+    password: ${DB_H2_PASSWORD:password}
+
+  # JPA Configuration
+  jpa:
+    defer-datasource-initialization: true
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    properties:
+      hibernate:
+        default_schema: attendance
+        format_sql: true
+        use_sql_comments: true
+        order_inserts: true
+        order_updates: true
+        jdbc:
+          batch_size: 20
+
+  # Mail Setting
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+  # Security Setting
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: mock-client-id
+            client-secret: mock-client-secret
+
+  # Redis Setting
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+# Logger Setting
+logging:
+  level:
+    root: INFO
+    com.attendance: DEBUG
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.telegram: INFO
+    org.springframework.security: DEBUG
+    liquibase: DEBUG
+
+  file:
+    name: logs/attendance-dev.log
+
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+
+# Telegram Bot Setting
+telegram:
+  bot:
+    username: ${TG_BOT_NAME}
+    token: ${TG_BOT_TOKEN}
